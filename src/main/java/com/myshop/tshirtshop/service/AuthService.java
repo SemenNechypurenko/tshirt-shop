@@ -9,8 +9,7 @@ import com.myshop.tshirtshop.model.User;
 import com.myshop.tshirtshop.repository.UserRepository;
 import com.myshop.tshirtshop.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,22 +18,21 @@ import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
-    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     public void register(RegisterRequest request) {
-        logger.debug("Registering user with email: {}", request.getEmail());
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            logger.warn("Registration failed: Email {} already in use", request.getEmail());
+            log.warn("Registration failed: Email {} already in use", request.getEmail());
             throw new UserAlreadyExistsException("Email already in use");
         }
         if (userRepository.existsByUsername(request.getUsername())) {
-            logger.warn("Registration failed: Username {} already in use", request.getUsername());
+            log.warn("Registration failed: Username {} already in use", request.getUsername());
             throw new UserAlreadyExistsException("Username already in use");
         }
 
@@ -47,25 +45,25 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
-        logger.info("User registered successfully: {}", request.getEmail());
+        log.info("User registered successfully: {}", request.getEmail());
     }
 
     public AuthResponse login(LoginRequest request) {
-        logger.debug("Attempting login for email: {}", request.getEmail());
+        log.debug("Attempting login for email: {}", request.getEmail());
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> {
-                    logger.warn("Login failed: User with email {} not found", request.getEmail());
+                    log.warn("Login failed: User with email {} not found", request.getEmail());
                     return new InvalidCredentialsException("User not found");
                 });
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            logger.warn("Login failed: Invalid password for email {}", request.getEmail());
+            log.warn("Login failed: Invalid password for email {}", request.getEmail());
             throw new InvalidCredentialsException("Invalid password");
         }
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRoles());
-        logger.info("User logged in successfully: {}", request.getEmail());
+        log.info("User logged in successfully: {}", request.getEmail());
         return new AuthResponse(token);
     }
 }
