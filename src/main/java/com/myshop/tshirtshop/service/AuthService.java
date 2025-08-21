@@ -3,6 +3,7 @@ package com.myshop.tshirtshop.service;
 import com.myshop.tshirtshop.dto.AuthResponse;
 import com.myshop.tshirtshop.dto.LoginRequest;
 import com.myshop.tshirtshop.dto.RegisterRequest;
+import com.myshop.tshirtshop.exception.UserAlreadyExistsException;
 import com.myshop.tshirtshop.model.User;
 import com.myshop.tshirtshop.repository.UserRepository;
 import com.myshop.tshirtshop.security.JwtUtil;
@@ -22,10 +23,10 @@ public class AuthService {
 
     public void register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already in use");
+            throw new UserAlreadyExistsException("Email already in use");
         }
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already in use");
+            throw new UserAlreadyExistsException("Username already in use");
         }
         User user = User.builder()
                 .username(request.getUsername())
